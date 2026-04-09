@@ -9,8 +9,7 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 # إعداد عقل Remma (معزول عن بياناتك الشخصية)
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
     system_instruction="""
     اسمك Remma. أنتِ فتاة أنمي ذكية جداً، هادئة، وشخصيتك ساخرة (Sarcastic). 
     تتحدثين بالعامية العربية بأسلوب طبيعي ومباشر.
