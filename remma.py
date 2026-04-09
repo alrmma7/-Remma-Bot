@@ -25,7 +25,8 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 genai.configure(api_key=GEMINI_API_KEY)
 # استخدمنا 'gemini-1.5-flash' وهو الأحدث والأسرع
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-pro')
+
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -39,39 +40,29 @@ async def on_message(message):
     if re.search(r'http[s]?://', message.content):
         try:
             await message.delete()
-            await message.channel.send(f"{message.author.mention} الروابط ممنوعة يا بطل! 🛡️")
+            await message.channel.send(f"{message.author.mention} الروابط ممنوعة! 🛡️")
         except: pass
         return
 
-    # 2. الرد المعلوماتي (مطور لحل مشكلة الصمت)
+    # 2. الرد المعلوماتي (تم تعديل الموديل وطريقة الإرسال)
     if 'Remma' in message.content or 'ريما' in message.content:
         async with message.channel.typing():
             try:
-                # إعدادات الأمان لإلغاء الحظر
-                safety = [
-                    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
-                ]
+                # محاولة توليد الرد
+                response = model.generate_content(message.content)
                 
-                # جلب الرد من Gemini
-                response = model.generate_content(message.content, safety_settings=safety)
-                
-                # سطر سحري لضمان اكتمال معالجة النص
-                await response.resolve()
-                
-                if response.text:
+                # إرسال النص (استخدمنا أسلوباً أبسط لضمان الوصول)
+                if response and response.text:
                     await message.reply(response.text)
                 else:
-                    await message.reply("وصلني كلامك بس جوجل حظرت الرد، حاول تسأل شي ثاني! 🙄")
+                    await message.reply("جوجل حظرت الرد بسبب قوانين الأمان، حاول تسألني شي ثاني! 🙄")
                     
             except Exception as e:
-                # طباعة الخطأ في Render Logs لمعرفته يقيناً
                 print(f"CRITICAL ERROR: {e}")
-                await message.reply(f"حدث خطأ تقني: {str(e)[:50]}... شيك على الـ Logs!")
+                # رد بسيط يوضح لك أن المشكلة في المفتاح أو الموديل
+                await message.reply("عندي مشكلة فنية بسيطة مع Gemini.. تأكد من صلاحية الـ API Key!")
 
-# --- تشغيل البوت مع السيرفر الوهمي ---
+# --- تشغيل البوت ---
 if __name__ == "__main__":
     keep_alive()
     client.run(DISCORD_TOKEN)
