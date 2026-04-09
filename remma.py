@@ -52,24 +52,16 @@ async def on_message(message):
         return
 
     # 2. نظام الرد الذكي (عند مناداتها بـ ريما أو Remma)
-    if 'Remma' in message.content or 'ريما' in message.content:
+       if 'Remma' in message.content or 'ريما' in message.content:
         async with message.channel.typing():
             try:
-                # طلب الرد من Gemini
+                # محاولة إرسال النص
                 response = model.generate_content(message.content)
-                
-                if response.text:
-                    await message.reply(response.text)
-                else:
-                    await message.reply("سمعتك، بس جوجل حظر الرد.. جرب سؤال ثاني! 🌚")
+                await message.reply(response.text)
             except Exception as e:
-                print(f"خطأ تقني: {e}")
-                await message.reply("عندي مشكلة في استيعاب الكلام حالياً.. تأكد من الـ API Key! ⚠️")
-
-# تشغيل السيرفر ثم البوت
-if __name__ == "__main__":
-    keep_alive()
-    if DISCORD_TOKEN:
-        client.run(DISCORD_TOKEN)
-    else:
-        print("خطأ: لم يتم العثور على DISCORD_TOKEN في إعدادات Render!")
+                print(f"CRITICAL ERROR: {e}")
+                # إذا كانت المنطقة غير مدعومة، سنخبر المستخدم بطريقة لبقة
+                if "location is not supported" in str(e):
+                    await message.reply("يا صاحبي، خادم الاستضافة موجود في منطقة محظورة من قبل جوجل.. جاري محاولة تغيير موقعي! 🌍")
+                else:
+                    await message.reply("عندي مشكلة فنية حالياً، جرب مناداتي لاحقاً. ⚠️")
