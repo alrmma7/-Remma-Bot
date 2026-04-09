@@ -31,35 +31,40 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
 @client.event
-async def on_ready():
-    print(f'تم تشغيل {client.user} بنجاح!')
-    # لتغيير الحالة إلى "Online" بشكل صريح
-    await client.change_presence(status=discord.Status.online, activity=discord.Game(name="مراقبة السيرفر 🛡️"))
-
-@client.event
 async def on_message(message):
     if message.author == client.user:
         return
 
-    # 1. فحص الروابط
+    # 1. فحص الروابط (شغال تمام)
     if re.search(r'http[s]?://', message.content):
         try:
             await message.delete()
-            await message.channel.send(f"{message.author.mention} عيب 😡.. الروابط ممنوعة!")
+            await message.channel.send(f"{message.author.mention} الروابط ممنوعة يا بطل! 🛡️")
         except: pass
         return
 
-    # 2. الرد المعلوماتي
+    # 2. الرد المعلوماتي (تم تعديله لإلغاء فلاتر الأمان)
     if 'Remma' in message.content or 'ريما' in message.content:
         async with message.channel.typing():
             try:
-                response = model.generate_content(message.content)
-                await message.reply(response.text)
+                # إعدادات لإلغاء حظر المحتوى (عشان ريما ترد ببراحة)
+                safety = [
+                    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+                ]
+                
+                # نطلب الرد من الموديل مع إعدادات الأمان الجديدة
+                response = model.generate_content(message.content, safety_settings=safety)
+                
+                # التأكد من أن الرد يحتوي على نص قبل الإرسال
+                if response.text:
+                    await message.reply(response.text)
+                else:
+                    await message.reply("سمعتك، بس ما أدري وش أقول! 😅")
+                    
             except Exception as e:
-                print(f"خطأ في Gemini: {e}")
-                await message.channel.send("عندي مشكلة في استيعاب الكلام حالياً.. جرب مرة ثانية.")
-
-# تشغيل السيرفر ثم البوت
-if __name__ == "__main__":
-    keep_alive()
-    client.run(DISCORD_TOKEN)
+                print(f"Error details: {e}")
+                # إذا فشل بسبب الأمان، نحاول إرسال رد بسيط
+                await message.reply("واضح إن كلامك حساس وجوجل زعلت منه! حاول تغير الأسلوب شوي. 🌚")
