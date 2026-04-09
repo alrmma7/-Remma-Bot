@@ -35,7 +35,7 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    # 1. فحص الروابط (شغال تمام)
+    # 1. فحص الروابط
     if re.search(r'http[s]?://', message.content):
         try:
             await message.delete()
@@ -43,11 +43,11 @@ async def on_message(message):
         except: pass
         return
 
-    # 2. الرد المعلوماتي (تم تعديله لإلغاء فلاتر الأمان)
+    # 2. الرد المعلوماتي (مطور لحل مشكلة الصمت)
     if 'Remma' in message.content or 'ريما' in message.content:
         async with message.channel.typing():
             try:
-                # إعدادات لإلغاء حظر المحتوى (عشان ريما ترد ببراحة)
+                # إعدادات الأمان لإلغاء الحظر
                 safety = [
                     {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
                     {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -55,16 +55,23 @@ async def on_message(message):
                     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
                 ]
                 
-                # نطلب الرد من الموديل مع إعدادات الأمان الجديدة
+                # جلب الرد من Gemini
                 response = model.generate_content(message.content, safety_settings=safety)
                 
-                # التأكد من أن الرد يحتوي على نص قبل الإرسال
+                # سطر سحري لضمان اكتمال معالجة النص
+                await response.resolve()
+                
                 if response.text:
                     await message.reply(response.text)
                 else:
-                    await message.reply("سمعتك، بس ما أدري وش أقول! 😅")
+                    await message.reply("وصلني كلامك بس جوجل حظرت الرد، حاول تسأل شي ثاني! 🙄")
                     
             except Exception as e:
-                print(f"Error details: {e}")
-                # إذا فشل بسبب الأمان، نحاول إرسال رد بسيط
-                await message.reply("واضح إن كلامك حساس وجوجل زعلت منه! حاول تغير الأسلوب شوي. 🌚")
+                # طباعة الخطأ في Render Logs لمعرفته يقيناً
+                print(f"CRITICAL ERROR: {e}")
+                await message.reply(f"حدث خطأ تقني: {str(e)[:50]}... شيك على الـ Logs!")
+
+# --- تشغيل البوت مع السيرفر الوهمي ---
+if __name__ == "__main__":
+    keep_alive()
+    client.run(DISCORD_TOKEN)
